@@ -5,6 +5,52 @@ using namespace geode::prelude;
 
 std::array<std::string, 5> tabs = {"Core", "Player", "Creator", "Replay", "About"};
 
+HacksTab* HacksTab::create() {
+    auto ret = new HacksTab();
+    if (ret->init()) {
+        ret->autorelease();
+        return ret;
+    }
+    delete ret;
+    return nullptr;
+}
+
+void HacksTab::addToggle(const std::string& text, bool enabled, const std::function<void(bool)>& callback) {
+    auto toggle = CCMenuItemToggler::createWithStandardSprites(this, menu_selector(HacksTab::onToggle), 0.75f);
+    y_lastToggle = 175 - (m_togglerCallbacks.size() * 25);
+
+    toggle->setPosition({ 140, y_lastToggle });
+    toggle->toggle(enabled);
+
+    auto label = CCLabelBMFont::create(text.c_str(), "bigFont.fnt");
+    label->setAnchorPoint({0.f, 0.5f});
+    label->setScale(0.5f);
+    label->setPosition({ 155, y_lastToggle });
+
+    addChild(toggle);
+    addChild(label);
+
+    m_togglerCallbacks[toggle] = callback;
+}
+
+bool HacksTab::init() {
+    if (!CCMenu::init())
+        return false;
+
+    setPosition({0, 0});
+
+    return true;
+}
+
+void HacksTab::onToggle(CCObject* sender) {
+    auto toggler = static_cast<CCMenuItemToggler*>(sender);
+    if (!toggler) return;
+
+    auto it = m_togglerCallbacks.find(toggler);
+    if (it != m_togglerCallbacks.end())
+        it->second(!toggler->isToggled());
+}
+
 bool HacksLayer::setup() {
     auto winSize = CCDirector::sharedDirector()->getWinSize();
 
@@ -44,6 +90,81 @@ bool HacksLayer::setup() {
     });
     right_arrowClick->setPosition({390, 110});
     m_buttonMenu->addChild(right_arrowClick);
+
+    //
+    // Core
+    //
+
+    coreTab = HacksTab::create();
+    coreTab->addToggle("Noclip", hacks.noclip, [&hacks](bool enabled) { hacks.noclip = enabled; });
+    coreTab->addToggle("Unlock Items", hacks.unlock_items, [&hacks](bool enabled) { hacks.unlock_items = enabled; });
+    coreTab->addToggle("No Respawn Blink", hacks.no_respawn_blink, [&hacks](bool enabled) { hacks.no_respawn_blink = enabled; });
+    coreTab->addToggle("No Death Effect", hacks.no_death_effect, [&hacks](bool enabled) { hacks.no_death_effect = enabled; });
+    coreTab->addToggle("Safe Mode", hacks.safe_mode, [&hacks](bool enabled) { hacks.safe_mode = enabled; });
+    
+    coreTab->addToggle("TPS", hacks.fps_enabled, [&hacks](bool enabled) { hacks.fps_enabled = enabled; });
+
+    auto fps_value_input = TextInput::create(55, "TPS Value", "chatFont.fnt");
+    fps_value_input->setPosition({225.f, coreTab->y_lastToggle});
+    fps_value_input->setFilter("1234567890.");
+    fps_value_input->setMaxCharCount(6);
+    fps_value_input->setString(fmt::format("{:.0f}", hacks.fps_value));
+    fps_value_input->setCallback([&hacks](const std::string& text) {
+        float fps = 240.f;
+        
+        bool valid = !text.empty() && std::all_of(text.begin(), text.end(), [](char c) { return std::isdigit(c) || c == '.'; });
+        
+        if (valid) {
+            std::istringstream iss(text);
+            iss >> fps;
+        }
+        
+        if (fps >= 1.f) {
+            hacks.fps_value = fps;
+        }
+    });
+    coreTab->addChild(fps_value_input);     
+    //
+    //TPS Bypass
+    //   
+
+    
+    //
+    //Speedhack
+    //
+    
+    coreTab->addToggle("Speedhack", hacks.speedhack_enabled, [&hacks](bool enabled) { hacks.speedhack_enabled = enabled; });
+
+    auto speedhack_value_input = TextInput::create(55, "Speed Value", "chatFont.fnt");
+    speedhack_value_input->setPosition({285.f, coreTab->y_lastToggle + 5});
+    speedhack_value_input->setFilter("1234567890.");
+    speedhack_value_input->setMaxCharCount(6);
+    speedhack_value_input->setString(fmt::format("{:.2f}", hacks.speedhack_value));
+    speedhack_value_input->setCallback([&hacks](const std::string& text) {
+        float speed = 1.f;
+        
+        bool valid = !text.empty() && std::all_of(text.begin(), text.end(), [](char c) { return std::isdigit(c) || c == '.'; });
+        
+        if (valid) {
+            std::istringstream iss(text);
+            iss >> speed;
+        }
+        
+        if (speed >= 0.01f) {
+            hacks.speedhack_value = speed;
+        }
+    });
+    coreTab->addChild(speedhack_value_input);
+
+    //coreTab->addToggle("Speedhack Audio", hacks.speedhack_audio, [&hacks](bool enabled) { hacks.speedhack_audio = enabled; });
+    m_mainLayer->addChild(coreTab);
+
+    //
+    // Core
+    //
+
+
+
 
     //
     //Replay Engine
@@ -177,6 +298,9 @@ bool HacksLayer::setup() {
     //Replay Engine
     //
 
+    //
+    //About
+    //
     aboutTab = CCMenu::create();
     aboutTab->setPosition({0, 0});
     aboutTab->setVisible(false);
@@ -186,6 +310,9 @@ bool HacksLayer::setup() {
     aboutLabel->setScale(0.5f);
     aboutLabel->setPosition({130, 140});
     aboutTab->addChild(aboutLabel);
+    //
+    //About
+    //
 
     m_mainLayer->addChild(replayTab);
     m_mainLayer->addChild(aboutTab);
