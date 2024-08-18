@@ -23,6 +23,7 @@ public:
     bool no_death_effect = false;
     bool safe_mode = false;
 
+    bool allow_low_volume = false;
     bool auto_pickup_coins = false;
     bool jump_hack = false;
     bool force_platformer = false;
@@ -48,6 +49,7 @@ public:
     bool no_c_mark = false;
     bool verify_hack = false;
     bool default_song_bypass = false;
+    bool scale_bypass = false;
 
     bool fps_enabled = false;
     float fps_value = 240.f;

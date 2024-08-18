@@ -20,6 +20,7 @@
 #include <Geode/modify/CCScheduler.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/CCDrawNode.hpp>
+#include <Geode/modify/OptionsLayer.hpp>
 #include "hacks.hpp"
 #include "speedhackAudio.hpp"
 #include "replayEngine.hpp"
@@ -595,4 +596,30 @@ class $modify(LevelEditorLayer) {
         playerTrail1.clear();
         playerTrail2.clear();
     }
+};
+
+
+class $modify(OptionsLayer) {
+    void musicSliderChanged(cocos2d::CCObject* sender) {
+        auto& hacks = Hacks::get();
+
+        OptionsLayer::musicSliderChanged(sender);
+        
+        if (!hacks.allow_low_volume)
+            return;
+        
+        auto value = geode::cast::typeinfo_cast<SliderThumb*>(sender)->getValue();
+
+        auto* audio_engine = FMODAudioEngine::sharedEngine();
+        if (value < 0.03f)
+            audio_engine->setBackgroundMusicVolume(value);
+    }
+
+    // void sfxSliderChanged(cocos2d::CCObject* sender) {
+    //     if (!config::get<bool>("bypass.allowlowvolume", false))
+    //         return OptionsLayer::sfxSliderChanged(sender);
+    //     auto slider = GET_SLIDER(sender);
+    //     auto value = slider->getValue();
+    //     FMODAudioEngine::get()->setEffectsVolume(value);
+    // }
 };

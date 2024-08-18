@@ -5,69 +5,6 @@ using namespace geode::prelude;
 
 std::array<std::string, 5> tabs = {"Core", "Player", "Creator", "Replay", "About"};
 
-HacksTab* HacksTab::create(bool no_scroll = false) {
-    auto ret = new HacksTab();
-    if (ret->init(no_scroll)) {
-        ret->autorelease();
-        return ret;
-    }
-    delete ret;
-    return nullptr;
-}
-
-void HacksTab::addToggle(const std::string& text, bool enabled, const std::function<void(bool)>& callback, float scale = 0.5f) {
-    auto toggle = CCMenuItemToggler::createWithStandardSprites(this, menu_selector(HacksTab::onToggle), 1.f);
-    y_lastToggle = (m_scrollLayer->m_contentLayer->getContentHeight() - 20) - (m_togglerCallbacks.size() * 35);
-    
-    toggle->setPosition({ 20, y_lastToggle });
-    toggle->toggle(enabled);
-
-    auto label = CCLabelBMFont::create(text.c_str(), "bigFont.fnt");
-    label->setAnchorPoint({0.f, 0.5f});
-    label->setScale(scale);
-    label->setPosition({ 45, y_lastToggle });
-
-    m_togglesMenu->addChild(toggle);
-    m_togglesMenu->addChild(label);
-
-    m_togglerCallbacks[toggle] = callback;
-}
-
-bool HacksTab::init(bool no_scroll) {
-    if (!CCMenu::init())
-        return false;
-
-    if (no_scroll) {
-        return true;
-    }
-
-    m_scrollLayer = ScrollLayer::create({225, 175});
-    m_scrollLayer->setPosition({125, 11});
-    m_scrollLayer->m_peekLimitTop = 0;
-    m_scrollLayer->m_peekLimitBottom = 0;
-    this->addChild(m_scrollLayer);
-
-    m_togglesMenu = CCMenu::create();
-    m_togglesMenu->setPosition({ 0, 0 });
-    m_scrollLayer->m_contentLayer->addChild(m_togglesMenu);
-
-    return true;
-}
-
-void HacksTab::onToggle(CCObject* sender) {
-    auto toggler = static_cast<CCMenuItemToggler*>(sender);
-    if (!toggler) return;
-
-    auto it = m_togglerCallbacks.find(toggler);
-    if (it != m_togglerCallbacks.end())
-        it->second(!toggler->isToggled());
-}
-
-void HacksTab::setAmountOfHacks(int amount) {
-    m_scrollLayer->m_contentLayer->setContentHeight(35 * amount + 5);
-    m_scrollLayer->moveToTop();
-}
-
 bool HacksLayer::setup() {
     auto winSize = CCDirector::sharedDirector()->getWinSize();
 
@@ -87,145 +24,33 @@ bool HacksLayer::setup() {
 
     auto background = extension::CCScale9Sprite::create("square02_small.png");
     background->setOpacity(100);
-    background->setPosition({238, 98});
-    background->setContentSize({230, 175});
+    background->setPosition({238, 100});
+    background->setContentSize({230, 180});
     m_mainLayer->addChild(background);
 
     auto& hacks = Hacks::get();
 
-    coreTab = HacksTab::create();
-    coreTab->setPosition({0, 0});
-    coreTab->setAmountOfHacks(8);
-    coreTab->addToggle("Noclip", hacks.noclip, [&hacks](bool enabled) { hacks.noclip = enabled; });
-    coreTab->addToggle("Unlock Items", hacks.unlock_items, [&hacks](bool enabled) { hacks.unlock_items = enabled; });
-    coreTab->addToggle("No Respawn Blink", hacks.no_respawn_blink, [&hacks](bool enabled) { hacks.no_respawn_blink = enabled; });
-    coreTab->addToggle("No Death Effect", hacks.no_death_effect, [&hacks](bool enabled) { hacks.no_death_effect = enabled; });
-    coreTab->addToggle("Safe Mode", hacks.safe_mode, [&hacks](bool enabled) { hacks.safe_mode = enabled; });
+    auto arrow = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
+    auto left_arrowClick = CCMenuItemExt::createSpriteExtra(arrow, [this](CCMenuItemSpriteExtra* sender) {
 
-    //
-    //TPS Bypass
-    //
-    coreTab->addToggle("TPS", hacks.fps_enabled, [&hacks](bool enabled) { hacks.fps_enabled = enabled; });
-
-    auto fps_value_input = TextInput::create(55, "TPS Value", "chatFont.fnt");
-    fps_value_input->setPosition({115.f, coreTab->y_lastToggle});
-    fps_value_input->setFilter("1234567890.");
-    fps_value_input->setMaxCharCount(6);
-    fps_value_input->setString(fmt::format("{:.0f}", hacks.fps_value));
-    fps_value_input->setCallback([&hacks](const std::string& text) {
-        float fps = 240.f;
-        
-        bool valid = !text.empty() && std::all_of(text.begin(), text.end(), [](char c) { return std::isdigit(c) || c == '.'; });
-        
-        if (valid) {
-            std::istringstream iss(text);
-            iss >> fps;
-        }
-        
-        if (fps >= 1.f) {
-            hacks.fps_value = fps;
-        }
     });
-    coreTab->m_scrollLayer->m_contentLayer->addChild(fps_value_input);     
-    //
-    //TPS Bypass
-    //   
+    left_arrowClick->setPosition({-25, 110});
+    m_buttonMenu->addChild(left_arrowClick);
 
-    
-    //
-    //Speedhack
-    //
-    
-    coreTab->addToggle("Speedhack", hacks.speedhack_enabled, [&hacks](bool enabled) { hacks.speedhack_enabled = enabled; });
+    auto arrowFlip = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
+    arrowFlip->setFlipX(true);
+    auto right_arrowClick = CCMenuItemExt::createSpriteExtra(arrowFlip, [this](CCMenuItemSpriteExtra* sender) {
 
-    auto speedhack_value_input = TextInput::create(55, "Speed Value", "chatFont.fnt");
-    speedhack_value_input->setPosition({170.f, coreTab->y_lastToggle});
-    speedhack_value_input->setFilter("1234567890.");
-    speedhack_value_input->setMaxCharCount(6);
-    speedhack_value_input->setString(fmt::format("{:.2f}", hacks.speedhack_value));
-    speedhack_value_input->setCallback([&hacks](const std::string& text) {
-        float speed = 1.f;
-        
-        bool valid = !text.empty() && std::all_of(text.begin(), text.end(), [](char c) { return std::isdigit(c) || c == '.'; });
-        
-        if (valid) {
-            std::istringstream iss(text);
-            iss >> speed;
-        }
-        
-        if (speed >= 0.01f) {
-            hacks.speedhack_value = speed;
-        }
     });
-    coreTab->m_scrollLayer->m_contentLayer->addChild(speedhack_value_input);
+    right_arrowClick->setPosition({390, 110});
+    m_buttonMenu->addChild(right_arrowClick);
 
-    coreTab->addToggle("Speedhack Audio", hacks.speedhack_audio, [&hacks](bool enabled) { hacks.speedhack_audio = enabled; });
     //
-    //Speedhack
+    //Replay Engine
     //
-    
-    coreTab->setVisible(true);
-
-    playerTab = HacksTab::create();
-    playerTab->setPosition({0, 0});
-    playerTab->setAmountOfHacks(14);
-    playerTab->addToggle("Auto Pickup Coins", hacks.auto_pickup_coins, [&hacks](bool enabled) { hacks.auto_pickup_coins = enabled; });
-    playerTab->addToggle("Jump Hack", hacks.jump_hack, [&hacks](bool enabled) { hacks.jump_hack = enabled; });
-    playerTab->addToggle("Force Platformer", hacks.force_platformer, [&hacks](bool enabled) { hacks.force_platformer = enabled; });
-    playerTab->addToggle("Hide Pause Button", hacks.hide_pause_button, [&hacks](bool enabled) { hacks.hide_pause_button = enabled; });
-    playerTab->addToggle("No Camera Move", hacks.no_camera_move, [&hacks](bool enabled) { hacks.no_camera_move = enabled; });
-    playerTab->addToggle("No Camera Zoom", hacks.no_camera_zoom, [&hacks](bool enabled) { hacks.no_camera_zoom = enabled; });
-    playerTab->addToggle("No Shaders", hacks.no_shader_layer, [&hacks](bool enabled) { hacks.no_shader_layer = enabled; });
-    playerTab->addToggle("No Particles", hacks.no_particles, [&hacks](bool enabled) { hacks.no_particles = enabled; });
-    playerTab->addToggle("No Short Number", hacks.no_short_number, [&hacks](bool enabled) { hacks.no_short_number = enabled; });
-    //playerTab->addToggle("No Background Flash", hacks.no_bg_flash, [&hacks](bool enabled) { hacks.no_bg_flash = enabled; }, 0.45f);
-    playerTab->addToggle("No Glow", hacks.no_glow, [&hacks](bool enabled) { hacks.no_glow = enabled; });
-    playerTab->addToggle("No Mirror Portal", hacks.no_mirror_portal, [&hacks](bool enabled) { hacks.no_mirror_portal = enabled; });
-    playerTab->addToggle("Main Levels Bypass", hacks.main_levels, [&hacks](bool enabled) { hacks.main_levels = enabled; });
-    //playerTab->addToggle("No Portal Lighting", hacks.no_portal_lighting, [&hacks](bool enabled) { hacks.no_portal_lighting = enabled; });
-    playerTab->addToggle("Show Hitbox", hacks.show_hitboxes, [&hacks](bool enabled) {
-        hacks.show_hitboxes = enabled;
-        auto pl = PlayLayer::get();
-        if (pl && !hacks.show_hitboxes && !(pl->m_isPracticeMode && GameManager::get()->getGameVariable("0166"))) {
-            pl->m_debugDrawNode->setVisible(false);
-        }    
-    });
-    playerTab->addToggle("Hitbox Trail", hacks.draw_trail, [&hacks](bool enabled) { hacks.draw_trail = enabled; });
-
-    auto hitbox_hitbox_trail_size_input = TextInput::create(55, "Trail Size", "chatFont.fnt");
-    hitbox_hitbox_trail_size_input->setPosition({190.f, coreTab->y_lastToggle});
-    hitbox_hitbox_trail_size_input->setFilter("1234567890");
-    hitbox_hitbox_trail_size_input->setMaxCharCount(3);
-    hitbox_hitbox_trail_size_input->setString(fmt::format("{}", hacks.trail_size));
-    hitbox_hitbox_trail_size_input->setCallback([&hacks](const std::string& text) {
-        int trail_size = 240;
-        
-        bool valid = !text.empty();
-        
-        if (valid) {
-            std::istringstream iss(text);
-            iss >> trail_size;
-        }
-        
-        hacks.trail_size = trail_size;
-    });
-    playerTab->m_scrollLayer->m_contentLayer->addChild(hitbox_hitbox_trail_size_input); 
-    
-
-    playerTab->setVisible(false);
-
-    creatorTab = HacksTab::create();
-    creatorTab->setPosition({0, 0});
-    creatorTab->setAmountOfHacks(5);
-    creatorTab->addToggle("Copy Hack", hacks.copy_hack, [&hacks](bool enabled) { hacks.copy_hack = enabled; });
-    creatorTab->addToggle("Level Edit", hacks.level_edit, [&hacks](bool enabled) { hacks.level_edit = enabled; });
-    creatorTab->addToggle("No (C) Mark", hacks.no_c_mark, [&hacks](bool enabled) { hacks.no_c_mark = enabled; });
-    creatorTab->addToggle("Verify Hack", hacks.verify_hack, [&hacks](bool enabled) { hacks.verify_hack = enabled; });
-    creatorTab->addToggle("Default Song Bypass", hacks.default_song_bypass, [&hacks](bool enabled) { hacks.default_song_bypass = enabled; });
-    creatorTab->setVisible(false);
-
-    replayTab = HacksTab::create(true);
+    replayTab = CCMenu::create();
     replayTab->setPosition({0, 0});
+    replayTab->setVisible(false);
 
     record_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this](CCMenuItemToggler* sender) {
         auto& hacks = Hacks::get();
@@ -348,22 +173,20 @@ bool HacksLayer::setup() {
     real_time_label->setScale(0.3f);
     real_time_label->setPosition({262.f, 65.f});
     replayTab->addChild(real_time_label);
+    //
+    //Replay Engine
+    //
 
-    replayTab->setVisible(false);
-
-    aboutTab = HacksTab::create(true);
+    aboutTab = CCMenu::create();
     aboutTab->setPosition({0, 0});
     aboutTab->setVisible(false);
-
+    
     auto aboutLabel = CCLabelBMFont::create("GDH Mobile by TobyAdd\nVersion: 1.0\n\nSpecial Thanks:\nPrevter", "bigFont.fnt");
     aboutLabel->setAnchorPoint({0.f, 0.5f});
     aboutLabel->setScale(0.5f);
     aboutLabel->setPosition({130, 140});
     aboutTab->addChild(aboutLabel);
 
-    m_mainLayer->addChild(coreTab);
-    m_mainLayer->addChild(playerTab);
-    m_mainLayer->addChild(creatorTab);
     m_mainLayer->addChild(replayTab);
     m_mainLayer->addChild(aboutTab);
 
@@ -381,16 +204,16 @@ void HacksLayer::onChangeTab(CCObject* sender) {
         }
     }
 
-    coreTab->setVisible(tag == 0);
-    playerTab->setVisible(tag == 1);
-    creatorTab->setVisible(tag == 2);
+    // coreTab->setVisible(tag == 0);
+    // playerTab->setVisible(tag == 1);
+    // creatorTab->setVisible(tag == 2);
     replayTab->setVisible(tag == 3);
     aboutTab->setVisible(tag == 4);
 }
 
 HacksLayer* HacksLayer::create() {
     auto ret = new HacksLayer();
-    if (ret->initAnchored(365.f, 220.f)) {
+    if (ret->initAnchored(365.f, 225.f)) {
         ret->autorelease();
         return ret;
     }
