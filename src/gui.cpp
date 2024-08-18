@@ -153,7 +153,7 @@ bool HacksLayer::setup() {
             iss >> speed;
         }
         
-        if (speed >= 0.01) {
+        if (speed >= 0.01f) {
             hacks.speedhack_value = speed;
         }
     });
@@ -227,7 +227,29 @@ bool HacksLayer::setup() {
     replayTab = HacksTab::create(true);
     replayTab->setPosition({0, 0});
 
-    record_toggle = CCMenuItemToggler::createWithStandardSprites(this, menu_selector(HacksLayer::on_record), 1.f);
+    record_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this](CCMenuItemToggler* sender) {
+        auto& hacks = Hacks::get();
+
+        play_toggle->toggle(false);
+        if (!record_toggle->isOn()) {
+            engine.mode = state::record;
+
+            if (!hacks.fps_enabled) {
+                FLAlertLayer::create("Info", "Enable TPS Bypass to record the replay", "OK")->show();
+                engine.mode = state::disable;
+                record_toggle->toggle(true);
+            }
+
+            if (!engine.replay2.empty()) {
+                FLAlertLayer::create("Info", "Please clear replay before recording another", "OK")->show();
+                engine.mode = state::disable;
+                record_toggle->toggle(true);
+            }
+        }
+        else {
+            engine.mode = state::disable;
+        }
+    });
     record_toggle->setPosition({145, 165});
     if (engine.mode == state::record) record_toggle->toggle(true);
     replayTab->addChild(record_toggle);
@@ -238,7 +260,22 @@ bool HacksLayer::setup() {
     record_label->setScale(0.5f);
     replayTab->addChild(record_label);
 
-    play_toggle = CCMenuItemToggler::createWithStandardSprites(this, menu_selector(HacksLayer::on_play), 1.f);
+    play_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this](CCMenuItemToggler* sender) {
+        auto& hacks = Hacks::get();
+
+        record_toggle->toggle(false);
+        if (!play_toggle->isOn()) {
+            if (!hacks.fps_enabled) {
+                FLAlertLayer::create("Info", "Enable TPS Bypass to playback the replay", "OK")->show();
+                engine.mode = state::disable;
+                play_toggle->toggle(true);
+            }
+            engine.mode = state::play;
+        }
+        else {
+            engine.mode = state::disable;
+        }
+    });
     play_toggle->setPosition({250, 165});
     if (engine.mode == state::play) play_toggle->toggle(true);
     replayTab->addChild(play_toggle);
@@ -257,26 +294,60 @@ bool HacksLayer::setup() {
     });
     replayTab->addChild(replay_name_input);
 
-    auto saveButton = ButtonSprite::create("Save", 40, true, "bigFont.fnt", "GJ_button_01.png", 30.f, 0.7f);
-    auto saveButtonClick = CCMenuItemSpriteExtra::create(saveButton, this, menu_selector(HacksLayer::on_save));
-    saveButtonClick->setPosition({155, 95});
-    replayTab->addChild(saveButtonClick);
-
-    auto loadButton = ButtonSprite::create("Load", 40, true, "bigFont.fnt", "GJ_button_01.png", 30.f, 0.7f);
-    auto loadButtonClick = CCMenuItemSpriteExtra::create(loadButton, this, menu_selector(HacksLayer::on_load));
-    loadButtonClick->setPosition({215, 95});
-    replayTab->addChild(loadButtonClick);
-
-    auto cleanButton = ButtonSprite::create("Clear", 40, true, "bigFont.fnt", "GJ_button_01.png", 30.f, 0.7f);
-    auto cleanButtonClick = CCMenuItemSpriteExtra::create(cleanButton, this, menu_selector(HacksLayer::on_clear_replay));
-    cleanButtonClick->setPosition({275, 95});
-    replayTab->addChild(cleanButtonClick);
-
     auto info_label = CCLabelBMFont::create(fmt::format("Frame: {}\nReplay Size: {}", engine.get_frame(), engine.replay2.size()).c_str(), "chatFont.fnt");
     info_label->setAnchorPoint({0.f, 0.5f});
     info_label->setPosition({128, 25});
     info_label->setScale(0.5f);
     replayTab->addChild(info_label);
+
+    auto saveButton = ButtonSprite::create("Save", 40, true, "bigFont.fnt", "GJ_button_01.png", 30.f, 0.7f);
+    auto saveButtonClick = CCMenuItemExt::createSpriteExtra(saveButton, [this](CCMenuItemSpriteExtra* sender) {
+        FLAlertLayer::create("Info", engine.save(engine.replay_name).c_str(), "OK")->show();
+    });
+    saveButtonClick->setPosition({155, 95});
+    replayTab->addChild(saveButtonClick);
+
+    auto loadButton = ButtonSprite::create("Load", 40, true, "bigFont.fnt", "GJ_button_01.png", 30.f, 0.7f);
+    auto loadButtonClick = CCMenuItemExt::createSpriteExtra(loadButton, [this, info_label](CCMenuItemSpriteExtra* sender) {
+        FLAlertLayer::create("Info", engine.load(engine.replay_name).c_str(), "OK")->show();
+        info_label->setString(fmt::format("Frame: {}\nReplay Size: {}", engine.get_frame(), engine.replay2.size()).c_str());
+    });
+    loadButtonClick->setPosition({215, 95});
+    replayTab->addChild(loadButtonClick);
+
+    auto cleanButton = ButtonSprite::create("Clear", 40, true, "bigFont.fnt", "GJ_button_01.png", 30.f, 0.7f);
+    auto cleanButtonClick = CCMenuItemExt::createSpriteExtra(cleanButton, [this, info_label](CCMenuItemSpriteExtra* sender) {
+        engine.replay.clear();
+        engine.replay2.clear();
+        FLAlertLayer::create("Info", "Replay has been cleared", "OK")->show();
+        info_label->setString(fmt::format("Frame: {}\nReplay Size: {}", engine.get_frame(), engine.replay2.size()).c_str());
+    });
+    cleanButtonClick->setPosition({275, 95});
+    replayTab->addChild(cleanButtonClick);
+
+    auto accuracy_fix_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this](CCMenuItemToggler* sender) { engine.accuracy_fix = !sender->isOn(); });
+    accuracy_fix_toggle->toggle(engine.accuracy_fix);
+    accuracy_fix_toggle->setScale(0.75f);
+    accuracy_fix_toggle->setPosition({138.f, 65.f});
+    replayTab->addChild(accuracy_fix_toggle);
+
+    auto accuracy_fix_label = CCLabelBMFont::create("Accuracy Fix", "bigFont.fnt");
+    accuracy_fix_label->setAnchorPoint({0.f, 0.5f});
+    accuracy_fix_label->setScale(0.3f);
+    accuracy_fix_label->setPosition({155.f, 65.f});
+    replayTab->addChild(accuracy_fix_label);
+
+    auto real_time_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this](CCMenuItemToggler* sender) { engine.real_time = !sender->isOn(); });
+    real_time_toggle->toggle(engine.real_time);
+    real_time_toggle->setScale(0.75f);
+    real_time_toggle->setPosition({245.f, 65.f});
+    replayTab->addChild(real_time_toggle);
+
+    auto real_time_label = CCLabelBMFont::create("Real Time", "bigFont.fnt");
+    real_time_label->setAnchorPoint({0.f, 0.5f});
+    real_time_label->setScale(0.3f);
+    real_time_label->setPosition({262.f, 65.f});
+    replayTab->addChild(real_time_label);
 
     replayTab->setVisible(false);
 

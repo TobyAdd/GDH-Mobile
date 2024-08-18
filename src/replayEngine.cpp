@@ -125,8 +125,6 @@ std::string ReplayEngine::load(std::string name)
 
     file.read(reinterpret_cast<char *>(&hacks.fps_value), sizeof(hacks.fps_value));
 
-    //hacks::update_framerate(hacks::tps_value);
-
     unsigned replay_size = 0;
     unsigned replay2_size = 0;
 

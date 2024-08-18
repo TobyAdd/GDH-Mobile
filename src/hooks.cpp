@@ -71,7 +71,7 @@ class $modify(cocos2d::CCDrawNode) {
 float left_over = 0.f;
 class $modify(cocos2d::CCScheduler) {
     void update(float dt) {
-        auto& hacks = Hacks::get();
+        auto& hacks = Hacks::get();        
 
         if (hacks.speedhack_enabled)
             dt *= hacks.speedhack_value;
@@ -82,6 +82,10 @@ class $modify(cocos2d::CCScheduler) {
 
         if (hacks.fps_enabled && pl && !pl->m_isPaused) {
             float newdt = 1.f / hacks.fps_value; 
+
+            if (!engine.real_time) {
+                return CCScheduler::update(newdt);
+            }
 
             unsigned times = static_cast<int>((dt + left_over) / newdt);  
             auto start = std::chrono::high_resolution_clock::now();
@@ -354,6 +358,24 @@ class $modify(GJBaseGameLayer) {
             while (playerTrail2.size() > maxLength)
                 playerTrail2.pop_front();
         }
+    }
+
+    float getModifiedDelta(float dt) {
+        auto& hacks = Hacks::get();
+
+        if (!hacks.fps_enabled) {
+            return GJBaseGameLayer::getModifiedDelta(dt);
+        }
+
+        if (m_resumeTimer-- > 0) {
+            dt = 0.f;
+        }
+
+        float modifier = fminf(1.0, m_gameState.m_timeWarp) / hacks.fps_value;
+        float total = dt + m_unk3248; //probably m_physDeltaBuffer, idk
+        double result = (double)llroundf(total / modifier) * modifier;
+        m_unk3248 = total - result;
+        return result;
     }
 };
 
