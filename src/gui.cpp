@@ -78,7 +78,14 @@ bool HacksLayer::setup() {
 
     auto arrow = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     auto left_arrowClick = CCMenuItemExt::createSpriteExtra(arrow, [this](CCMenuItemSpriteExtra* sender) {
-
+        if (index == 0) {
+            coreTab->setVisible(true);
+            coreTab2->setVisible(false);
+        }
+        else if (index == 1) {
+            playerTab->setVisible(true);
+            playerTab2->setVisible(false);
+        }
     });
     left_arrowClick->setPosition({-25, 110});
     m_buttonMenu->addChild(left_arrowClick);
@@ -86,7 +93,14 @@ bool HacksLayer::setup() {
     auto arrowFlip = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     arrowFlip->setFlipX(true);
     auto right_arrowClick = CCMenuItemExt::createSpriteExtra(arrowFlip, [this](CCMenuItemSpriteExtra* sender) {
-
+        if (index == 0) {
+            coreTab->setVisible(false);
+            coreTab2->setVisible(true);
+        }
+        else if (index == 1) {
+            playerTab->setVisible(false);
+            playerTab2->setVisible(true);
+        }
     });
     right_arrowClick->setPosition({390, 110});
     m_buttonMenu->addChild(right_arrowClick);
@@ -156,22 +170,92 @@ bool HacksLayer::setup() {
     });
     coreTab->addChild(speedhack_value_input);
 
-    //coreTab->addToggle("Speedhack Audio", hacks.speedhack_audio, [&hacks](bool enabled) { hacks.speedhack_audio = enabled; });
-    m_mainLayer->addChild(coreTab);
+    coreTab2 = HacksTab::create();
+    coreTab2->setVisible(false);
+    coreTab2->addToggle("Speedhack Audio", hacks.speedhack_audio, [&hacks](bool enabled) { hacks.speedhack_audio = enabled; });    
+    
+
 
     //
     // Core
     //
 
+    //
+    // Player
+    //
+    playerTab = HacksTab::create();
+    playerTab->addToggle("Auto Pickup Coins", hacks.auto_pickup_coins, [&hacks](bool enabled) { hacks.auto_pickup_coins = enabled; });
+    playerTab->addToggle("Jump Hack", hacks.jump_hack, [&hacks](bool enabled) { hacks.jump_hack = enabled; });
+    playerTab->addToggle("Force Platformer", hacks.force_platformer, [&hacks](bool enabled) { hacks.force_platformer = enabled; });
+    playerTab->addToggle("Hide Pause Button", hacks.hide_pause_button, [&hacks](bool enabled) { hacks.hide_pause_button = enabled; });
+    playerTab->addToggle("No Camera Move", hacks.no_camera_move, [&hacks](bool enabled) { hacks.no_camera_move = enabled; });
+    playerTab->addToggle("No Camera Zoom", hacks.no_camera_zoom, [&hacks](bool enabled) { hacks.no_camera_zoom = enabled; });
+    playerTab->addToggle("No Shaders", hacks.no_shader_layer, [&hacks](bool enabled) { hacks.no_shader_layer = enabled; });
 
+    playerTab2 = HacksTab::create();
+    playerTab2->setVisible(false);
+    playerTab2->addToggle("No Particles", hacks.no_particles, [&hacks](bool enabled) { hacks.no_particles = enabled; });
+    playerTab2->addToggle("No Short Number", hacks.no_short_number, [&hacks](bool enabled) { hacks.no_short_number = enabled; });
+    //playerTab2->addToggle("No Background Flash", hacks.no_bg_flash, [&hacks](bool enabled) { hacks.no_bg_flash = enabled; }, 0.45f);
+    playerTab2->addToggle("No Glow", hacks.no_glow, [&hacks](bool enabled) { hacks.no_glow = enabled; });
+    playerTab2->addToggle("No Mirror Portal", hacks.no_mirror_portal, [&hacks](bool enabled) { hacks.no_mirror_portal = enabled; });
+    playerTab2->addToggle("Main Levels Bypass", hacks.main_levels, [&hacks](bool enabled) { hacks.main_levels = enabled; });
+    //playerTab2->addToggle("No Portal Lighting", hacks.no_portal_lighting, [&hacks](bool enabled) { hacks.no_portal_lighting = enabled; });
+    playerTab2->addToggle("Show Hitbox", hacks.show_hitboxes, [&hacks](bool enabled) {
+        hacks.show_hitboxes = enabled;
+        auto pl = PlayLayer::get();
+        if (pl && !hacks.show_hitboxes && !(pl->m_isPracticeMode && GameManager::get()->getGameVariable("0166"))) {
+            pl->m_debugDrawNode->setVisible(false);
+        }    
+    });
+    playerTab2->addToggle("Hitbox Trail", hacks.draw_trail, [&hacks](bool enabled) { hacks.draw_trail = enabled; });
 
+    auto hitbox_hitbox_trail_size_input = TextInput::create(55, "Trail Size", "chatFont.fnt");
+    hitbox_hitbox_trail_size_input->setPosition({300.f, coreTab->y_lastToggle + 5});
+    hitbox_hitbox_trail_size_input->setFilter("1234567890");
+    hitbox_hitbox_trail_size_input->setMaxCharCount(3);
+    hitbox_hitbox_trail_size_input->setString(fmt::format("{}", hacks.trail_size));
+    hitbox_hitbox_trail_size_input->setCallback([&hacks](const std::string& text) {
+        int trail_size = 240;
+        
+        bool valid = !text.empty();
+        
+        if (valid) {
+            std::istringstream iss(text);
+            iss >> trail_size;
+        }
+        
+        hacks.trail_size = trail_size;
+    });
+    playerTab2->addChild(hitbox_hitbox_trail_size_input); 
+    
+
+    playerTab->setVisible(false);
+    //
+    // Player
+    //
+
+    //
+    // Creator
+    //
+
+    creatorTab = HacksTab::create();
+    creatorTab->setVisible(false);
+    creatorTab->addToggle("Copy Hack", hacks.copy_hack, [&hacks](bool enabled) { hacks.copy_hack = enabled; });
+    creatorTab->addToggle("Level Edit", hacks.level_edit, [&hacks](bool enabled) { hacks.level_edit = enabled; });
+    creatorTab->addToggle("No (C) Mark", hacks.no_c_mark, [&hacks](bool enabled) { hacks.no_c_mark = enabled; });
+    creatorTab->addToggle("Verify Hack", hacks.verify_hack, [&hacks](bool enabled) { hacks.verify_hack = enabled; });
+
+    //
+    // Creator
+    //
 
     //
     //Replay Engine
     //
     replayTab = CCMenu::create();
     replayTab->setPosition({0, 0});
-    replayTab->setVisible(false);
+    replayTab->setVisible(false);    
 
     record_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this](CCMenuItemToggler* sender) {
         auto& hacks = Hacks::get();
@@ -314,6 +398,14 @@ bool HacksLayer::setup() {
     //About
     //
 
+    m_mainLayer->addChild(coreTab);
+    m_mainLayer->addChild(coreTab2);
+
+    m_mainLayer->addChild(playerTab);
+    m_mainLayer->addChild(playerTab2);
+
+    m_mainLayer->addChild(creatorTab);
+
     m_mainLayer->addChild(replayTab);
     m_mainLayer->addChild(aboutTab);
 
@@ -321,21 +413,26 @@ bool HacksLayer::setup() {
 }
 
 void HacksLayer::onChangeTab(CCObject* sender) {
-    int tag = sender->getTag();
+    index = sender->getTag();
 
     for (int i = 0; i < tabs.size(); i++) {
         auto* btn = m_buttonMenu->getChildByTag(i);
         auto* child = btn->getChildren()->objectAtIndex(0);
         if (auto* btnSprite = typeinfo_cast<ButtonSprite*>(child)) {
-            btnSprite->updateBGImage(i == tag ? "GJ_button_02.png" : "GJ_button_01.png");
+            btnSprite->updateBGImage(i == index ? "GJ_button_02.png" : "GJ_button_01.png");
         }
     }
 
-    // coreTab->setVisible(tag == 0);
-    // playerTab->setVisible(tag == 1);
-    // creatorTab->setVisible(tag == 2);
-    replayTab->setVisible(tag == 3);
-    aboutTab->setVisible(tag == 4);
+    coreTab->setVisible(index == 0);
+    coreTab2->setVisible(false);
+
+    playerTab->setVisible(index == 1);
+    playerTab2->setVisible(false);
+
+    creatorTab->setVisible(index == 2);
+
+    replayTab->setVisible(index == 3);
+    aboutTab->setVisible(index == 4);
 }
 
 HacksLayer* HacksLayer::create() {

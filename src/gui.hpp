@@ -30,12 +30,20 @@ private:
     CCMenuItemToggler* play_toggle;
 
     HacksTab* coreTab;
+    HacksTab* coreTab2;
+
+    HacksTab* playerTab;
+    HacksTab* playerTab2;
+
+    HacksTab* creatorTab;
+
     CCMenu* replayTab;
     CCMenu* aboutTab;
+
+    int index = 0;
 protected:
     bool setup() override;
-    void onChangeTab(CCObject* sender);
-
+    void onChangeTab(CCObject* sender);    
 public:
     static HacksLayer* create();
 };
