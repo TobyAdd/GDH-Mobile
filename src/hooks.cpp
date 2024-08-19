@@ -500,6 +500,40 @@ class $modify(PauseLayer) {
 
         PlayLayer::get()->m_level->m_levelType = a;
     }
+
+    void musicSliderChanged(cocos2d::CCObject* sender) {
+        auto& hacks = Hacks::get();
+
+        PauseLayer::musicSliderChanged(sender);
+        
+        if (!hacks.allow_low_volume)
+            return;
+        
+        auto value = geode::cast::typeinfo_cast<SliderThumb*>(sender)->getValue();
+
+        auto* audio_engine = FMODAudioEngine::sharedEngine();
+        if (value < 0.03f)
+            audio_engine->setBackgroundMusicVolume(value);
+    }
+
+    #ifdef GEODE_IS_ANDROID
+    
+    void sfxSliderChanged(cocos2d::CCObject* sender) {
+        auto& hacks = Hacks::get();
+
+        PauseLayer::sfxSliderChanged(sender);
+        
+        if (!hacks.allow_low_volume)
+            return;
+
+        auto value = geode::cast::typeinfo_cast<SliderThumb*>(sender)->getValue();
+
+        auto* audio_engine = FMODAudioEngine::sharedEngine();
+        if (value < 0.03f)
+            audio_engine->setEffectsVolume(value);
+    }
+
+    #endif
 };
 
 class $modify(LevelTools) {
@@ -618,7 +652,7 @@ class $modify(OptionsLayer) {
     void sfxSliderChanged(cocos2d::CCObject* sender) {
         auto& hacks = Hacks::get();
 
-        OptionsLayer::musicSliderChanged(sender);
+        OptionsLayer::sfxSliderChanged(sender);
         
         if (!hacks.allow_low_volume)
             return;
