@@ -34,6 +34,7 @@ private:
 
     HacksTab* playerTab;
     HacksTab* playerTab2;
+    HacksTab* playerTab3;
 
     HacksTab* creatorTab;
 

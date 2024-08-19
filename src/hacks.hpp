@@ -33,10 +33,9 @@ public:
     bool no_shader_layer = false;
     bool no_particles = false;
     bool no_short_number = false;
-    bool no_bg_flash = false;
     bool no_glow = false;
     bool no_mirror_portal = false;
-    bool no_portal_lighting = false;
+    bool no_lighting = false;
 
     bool show_hitboxes = false;
     bool draw_trail = false;
