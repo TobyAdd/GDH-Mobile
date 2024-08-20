@@ -488,3 +488,7 @@ HacksLayer* HacksLayer::create() {
     delete ret;
     return nullptr;
 }
+
+void HacksLayer::onExit() {
+    Hacks::get().save(fileDataPath);
+}

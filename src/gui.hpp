@@ -42,9 +42,11 @@ private:
     CCMenu* aboutTab;
 
     int index = 0;
+
+    void onExit() override;
 protected:
     bool setup() override;
-    void onChangeTab(CCObject* sender);    
+    void onChangeTab(CCObject* sender);
 public:
     static HacksLayer* create();
 };

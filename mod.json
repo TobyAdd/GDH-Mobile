@@ -6,7 +6,7 @@
 	},
 	"id": "tobyadd.gdh_mobile",
 	"name": "GDH Mobile",
-	"version": "v1.0.0",
+	"version": "v1.0.0-beta.1",
 	"developer": "TobyAdd",
-	"description": "sex"
+	"description": "Port of GDH to the Android version of Geometry Dash "
 }

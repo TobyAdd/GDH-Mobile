@@ -15,6 +15,9 @@ void CheckDir(const std::filesystem::path &path)
 
 $execute {
     CheckDir(folderMacroPath);
+
+	auto& hacks = Hacks::get();
+	hacks.load(fileDataPath);
 }
 
 class $modify(MyMenuLayer, MenuLayer) {

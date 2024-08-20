@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <string>
+#include <matjson.hpp>
 
 static const auto folderPath = geode::Mod::get()->getSaveDir();
 static const auto folderMacroPath = folderPath / "Macros";
@@ -56,6 +57,9 @@ public:
     bool speedhack_enabled = false;
     bool speedhack_audio = false;
     float speedhack_value = 1.0f;
+
+    void save(const std::filesystem::path &path);
+    void load(const std::filesystem::path &path);
 
 private:
     Hacks() = default;
