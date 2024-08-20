@@ -1,2 +1,2 @@
-# 1.0.0
-- Edit this file to change your mod's changelog.
+# v1.0.0-beta.1
+- first ver drop

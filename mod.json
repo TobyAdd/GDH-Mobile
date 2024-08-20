@@ -8,5 +8,26 @@
 	"name": "GDH Mobile",
 	"version": "v1.0.0-beta.1",
 	"developer": "TobyAdd",
-	"description": "Port of GDH to the Android version of Geometry Dash "
+	"description": "Port of GDH to the Android version of Geometry Dash",
+	"early-load": true,
+	"links": {
+        "homepage": "https://tobyadd.github.io/GDH",
+        "source": "https://github.com/TobyAdd/GDH-Mobile",
+        "community": "https://discord.gg/ahYEz4MAwP"
+    },
+	"issues": {
+		"info": "Report bugs on GitHub issues page",
+		"url": "https://github.com/TobyAdd/GDH-Mobile/issues"
+	},
+	"tags": [
+		"universal",
+		"interface",
+		"utility",
+		"cheats"
+	],
+	"resources": {
+		"sprites": [
+			"res/screenshot.png"
+		]
+	}
 }

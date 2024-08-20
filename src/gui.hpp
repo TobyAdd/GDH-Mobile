@@ -43,7 +43,7 @@ private:
 
     int index = 0;
 
-    void onExit() override;
+    //void onExit() override;
 protected:
     bool setup() override;
     void onChangeTab(CCObject* sender);

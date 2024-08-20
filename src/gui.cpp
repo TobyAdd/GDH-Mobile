@@ -430,7 +430,7 @@ bool HacksLayer::setup() {
     aboutTab->setPosition({0, 0});
     aboutTab->setVisible(false);
     
-    auto aboutLabel = CCLabelBMFont::create("GDH Mobile by TobyAdd\nVersion: 1.0\n\nSpecial Thanks:\nPrevter", "bigFont.fnt");
+    auto aboutLabel = CCLabelBMFont::create("GDH Mobile by TobyAdd\nVersion: v1.0.0-beta.1\n\nSpecial Thanks:\nPrevter", "bigFont.fnt");
     aboutLabel->setAnchorPoint({0.f, 0.5f});
     aboutLabel->setScale(0.5f);
     aboutLabel->setPosition({130, 140});
@@ -489,6 +489,6 @@ HacksLayer* HacksLayer::create() {
     return nullptr;
 }
 
-void HacksLayer::onExit() {
-    Hacks::get().save(fileDataPath);
-}
+// void HacksLayer::onExit() {
+//     Hacks::get().save(fileDataPath);
+// }

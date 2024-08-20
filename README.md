@@ -1,23 +1,19 @@
-# test
-This is where she makes a mod.
+# GDH Mobile
+Port of GDH to the Android version of Geometry Dash 
 
-<img src="logo.png" width="150" alt="the mod's logo" />
+# Gallery
+![screenshot](res/screenshot.png)
 
-*Update logo.png to change your mod's icon (please)*
+# Features
+- Basic Hacks
+- Bot called Replay Engine
+- TPS Unlocker
+- Speedhack
+- Hitboxes
+- And more!
 
-## Getting started
-We recommend heading over to [the getting started section on our docs](https://docs.geode-sdk.org/getting-started/) for useful info on what to do next.
-
-## Build instructions
-For more info, see [our docs](https://docs.geode-sdk.org/getting-started/create-mod#build)
-```sh
-# Assuming you have the Geode CLI set up already
-geode build
-```
-
-# Resources
-* [Geode SDK Documentation](https://docs.geode-sdk.org/)
-* [Geode SDK Source Code](https://github.com/geode-sdk/geode/)
-* [Geode CLI](https://github.com/geode-sdk/cli)
-* [Bindings](https://github.com/geode-sdk/bindings/)
-* [Dev Tools](https://github.com/geode-sdk/DevTools)
+# Install GDH Mobile directly through the mod catalogue in Geode itself
+1. Make sure [Geode](https://geode-sdk.org/) is installed
+2. In the mod install menu, under the Discover page, find GDH and install it
+3. Restart the game
+4. Press "Like" button to show the integrated menu
