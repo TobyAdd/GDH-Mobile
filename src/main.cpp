@@ -1,6 +1,7 @@
 #include "gui.hpp"
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/PauseLayer.hpp>
+#include <Geode/modify/EditorPauseLayer.hpp>
 #include "hacks.hpp"
 
 using namespace geode::prelude;
@@ -35,7 +36,7 @@ class $modify(MyMenuLayer, MenuLayer) {
 		auto menu = this->getChildByID("bottom-menu");
 		menu->addChild(myButton);
 
-		myButton->setID("my-button"_spr);
+		myButton->setID("gdh-menu"_spr);
 		menu->updateLayout();
 
 		return true;
@@ -55,7 +56,8 @@ class $modify(MyPauseLayer, PauseLayer) {
 			this,
 			menu_selector(MyPauseLayer::showPopup)
 		);
-		myButton->setPosition({35, 35});
+		myButton->setPosition({35.f, 35.f});
+		myButton->setID("gdh-menu"_spr);
 
 		CCMenu* menu = CCMenu::create();
 		menu->setPosition({0, 0});
@@ -69,3 +71,26 @@ class $modify(MyPauseLayer, PauseLayer) {
 	}
 };
 
+class $modify(MyEditorPauseLayer, EditorPauseLayer) {
+	void customSetup() {
+		EditorPauseLayer::customSetup();
+
+		auto myButton = CCMenuItemSpriteExtra::create(
+			CCSprite::createWithSpriteFrameName("GJ_likeBtn_001.png"),
+			this,
+			menu_selector(MyEditorPauseLayer::showPopup)
+		);
+		myButton->setPosition({410.f, 285.f});
+		myButton->setID("gdh-menu"_spr);
+
+		CCMenu* menu = CCMenu::create();
+		menu->setPosition({0, 0});
+		
+		menu->addChild(myButton);
+		this->addChild(menu);
+	}
+
+	void showPopup(CCObject* sender) {
+		HacksLayer::create()->show();
+	}
+};

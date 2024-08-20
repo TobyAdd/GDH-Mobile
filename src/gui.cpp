@@ -489,6 +489,7 @@ HacksLayer* HacksLayer::create() {
     return nullptr;
 }
 
-// void HacksLayer::onExit() {
-//     Hacks::get().save(fileDataPath);
-// }
+void HacksLayer::onExit() {
+    geode::Popup<>::onExit();
+    Hacks::get().save(fileDataPath);
+}
