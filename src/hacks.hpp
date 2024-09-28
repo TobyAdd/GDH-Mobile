@@ -23,8 +23,6 @@ public:
             std::string file_contents((std::istreambuf_iterator<char>(inFile)), std::istreambuf_iterator<char>());
             jsonData = matjson::parse(file_contents);
             inFile.close();
-        } else {
-            MessageBoxA(0, "error load", 0, 0);
         }
     }
 
@@ -33,8 +31,6 @@ public:
         if (outFile.is_open()) {
             outFile << jsonData.dump(4);
             outFile.close();
-        } else {
-            MessageBoxA(0, "error save", 0, 0);
         }
     }
 
