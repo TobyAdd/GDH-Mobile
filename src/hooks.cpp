@@ -523,7 +523,7 @@ class $modify(PauseLayer) {
 
         PauseLayer::sfxSliderChanged(sender);
         
-        if (!hacks.allow_low_volume)
+        if (!Config::get().get<bool>("allow_low_volume", false))
             return;
 
         auto value = geode::cast::typeinfo_cast<SliderThumb*>(sender)->getValue();
