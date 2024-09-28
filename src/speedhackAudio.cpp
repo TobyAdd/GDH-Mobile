@@ -3,7 +3,7 @@
 
 namespace speedhackAudio {
     void update() {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         FMOD::Channel *channel;
         FMOD::System *system = FMODAudioEngine::sharedEngine()->m_system;
@@ -14,8 +14,8 @@ namespace speedhackAudio {
                 channel->getCurrentSound(&sound);
                 float freq;
                 sound->getDefaults(&freq, nullptr);
-                if (hacks.speedhack_enabled && hacks.speedhack_audio)
-                    channel->setFrequency(freq * hacks.speedhack_value);
+                if (config.get<bool>("speedhack_enabled", false) && config.get<bool>("speedhack_audio", false))
+                    channel->setFrequency(freq * config.get<float>("speedhack_value", 1.f));
                 else
                     channel->setFrequency(freq * 1.f);
             }

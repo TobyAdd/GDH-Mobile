@@ -50,9 +50,9 @@ void drawTrail(cocos2d::CCDrawNode *node) {
 class $modify(cocos2d::CCDrawNode) {
     bool drawPolygon(cocos2d::CCPoint* vertex, unsigned int count, const cocos2d::ccColor4F& fillColor,
                      float borderWidth, const cocos2d::ccColor4F& borderColor) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
-        if (hacks.show_hitboxes)
+        if (config.get<bool>("show_hitboxes", false))
             borderWidth = abs(borderWidth);
 
         return cocos2d::CCDrawNode::drawPolygon(vertex, count, fillColor, borderWidth, borderColor);
@@ -60,9 +60,9 @@ class $modify(cocos2d::CCDrawNode) {
 
     bool drawCircle(const cocos2d::CCPoint& position, float radius, const cocos2d::ccColor4F& color,
                     float borderWidth, const cocos2d::ccColor4F& borderColor, unsigned int segments) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
-        if (hacks.show_hitboxes)
+        if (config.get<bool>("show_hitboxes", false))
             borderWidth = abs(borderWidth);            
 
         return cocos2d::CCDrawNode::drawCircle(position, radius, color, borderWidth, borderColor, segments);
@@ -72,17 +72,17 @@ class $modify(cocos2d::CCDrawNode) {
 float left_over = 0.f;
 class $modify(cocos2d::CCScheduler) {
     void update(float dt) {
-        auto& hacks = Hacks::get();        
+        auto& config = Config::get();        
 
-        if (hacks.speedhack_enabled)
-            dt *= hacks.speedhack_value;
+        if (config.get<bool>("speedhack_enabled", false))
+            dt *= config.get<float>("speedhack_value", 1.f);
 
         speedhackAudio::update();
 
         auto pl = GameManager::sharedState()->getPlayLayer();
 
-        if (hacks.fps_enabled && pl && !pl->m_isPaused) {
-            float newdt = 1.f / hacks.fps_value; 
+        if (config.get<bool>("fps_enabled", false) && pl && !pl->m_isPaused) {
+            float newdt = 1.f / config.get<float>("fps_value", 240.f); 
 
             if (!engine.real_time) {
                 return CCScheduler::update(newdt);
@@ -119,7 +119,7 @@ class $modify(PlayLayer) {
     };
 
     void destroyPlayer(PlayerObject* player, GameObject* obj) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         if (!m_fields->anticheat_obj)
             m_fields->anticheat_obj = obj;
@@ -127,7 +127,7 @@ class $modify(PlayLayer) {
         if (obj == m_fields->anticheat_obj)
             PlayLayer::destroyPlayer(player, obj);
 
-        if (!hacks.noclip) {
+        if (!config.get<bool>("noclip", false)) {
             PlayLayer::destroyPlayer(player, obj);
         }
     }
@@ -135,26 +135,26 @@ class $modify(PlayLayer) {
     void updateProgressbar() {
         PlayLayer::updateProgressbar();
 
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
-        if (hacks.show_hitboxes) {
+        if (config.get<bool>("show_hitboxes", false)) {
             if (!(m_isPracticeMode && GameManager::get()->getGameVariable("0166")))
                 PlayLayer::updateDebugDraw();
             
             m_debugDrawNode->setVisible(true);
 
-            if (hacks.draw_trail)
+            if (config.get<bool>("draw_trail", false))
                 drawTrail(m_debugDrawNode);
         }
     }
 
     void showNewBest(bool p0, int p1, int p2, bool p3, bool p4, bool p5) {
-        if (Hacks::get().safe_mode) return;        
+        if (Config::get().get<bool>("safe_mode", false)) return;        
         PlayLayer::showNewBest(p0, p1, p2, p3, p4, p5);
     }
 
     void resetLevel() {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         PlayLayer::resetLevel();
 
@@ -165,10 +165,10 @@ class $modify(PlayLayer) {
 
         left_over = 0.f;
 
-        if (hacks.safe_mode)
+        if (config.get<bool>("safe_mode", false))
             m_level->m_attempts = m_level->m_attempts - 1;
 
-        if (hacks.auto_pickup_coins) {
+        if (config.get<bool>("auto_pickup_coins", false)) {
             for (auto* coin : m_fields->coinsObjects) {
                 if (!coin) continue;
                 destroyObject(coin);
@@ -179,7 +179,7 @@ class $modify(PlayLayer) {
     }
 
     void addObject(GameObject* obj) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         PlayLayer::addObject(obj);
 
@@ -187,16 +187,16 @@ class $modify(PlayLayer) {
             m_fields->coinsObjects.push_back(obj);
         }
 
-        if (hacks.no_glow) {
+        if (config.get<bool>("no_glow", false)) {
             obj->m_hasNoGlow = true;
         }
     }
 
     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
 
-        if (hacks.force_platformer)  {
+        if (config.get<bool>("force_platformer", false))  {
             m_player1->togglePlatformerMode(true);
             m_player2->togglePlatformerMode(true);
         }
@@ -222,16 +222,16 @@ class $modify(GameManager) {
         if (GameManager::isColorUnlocked(key, type))
             return true;
 
-        auto& hacks = Hacks::get();
-        return hacks.unlock_items;
+        auto& config = Config::get();
+        return config.get<bool>("unlock_items", false);
     }
 
     bool isIconUnlocked(int key, IconType type) {
         if (GameManager::isIconUnlocked(key, type))
             return true;
 
-        auto& hacks = Hacks::get();
-        return hacks.unlock_items;
+        auto& config = Config::get();
+        return config.get<bool>("unlock_items", false);
     }
 };
 
@@ -240,8 +240,8 @@ class $modify(GameStatsManager) {
         if (GameStatsManager::isItemUnlocked(p0, p1))
             return true;
         
-        auto& hacks = Hacks::get();
-        if (!hacks.unlock_items)
+        auto& config = Config::get();
+        if (!config.get<bool>("unlock_items", false))
             return false;
 
         if (p0 == UnlockType::GJItem & p1 == 16)
@@ -256,17 +256,17 @@ class $modify(GameStatsManager) {
 
 class $modify(PlayerObject) {
     void playSpawnEffect() {
-        if (Hacks::get().no_respawn_blink) return;        
+        if (Config::get().get<bool>("no_respawn_blink", false)) return;        
         PlayerObject::playSpawnEffect();
     }
 
     void playDeathEffect() {
-        if (Hacks::get().no_death_effect) return;            
+        if (Config::get().get<bool>("no_death_effect", false)) return;            
         PlayerObject::playDeathEffect();
     }
 
     void incrementJumps() {
-        if (Hacks::get().safe_mode) return;
+        if (Config::get().get<bool>("safe_mode", false)) return;
 
         PlayerObject::incrementJumps();
     }
@@ -274,7 +274,7 @@ class $modify(PlayerObject) {
 
 class $modify(GJGameLevel) {
     void savePercentage(int percent, bool isPracticeMode, int clicks, int attempts, bool isChkValid) {
-        if (Hacks::get().safe_mode) return;
+        if (Config::get().get<bool>("safe_mode", false)) return;
         GJGameLevel::savePercentage(percent, isPracticeMode, clicks, attempts, isChkValid);
     }
 };
@@ -285,11 +285,11 @@ class $modify(GJBaseGameLayer) {
     };
 
     void handleButton(bool down, int button, bool isPlayer1) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         GJBaseGameLayer::handleButton(down, button, isPlayer1);   
 
-        if (hacks.jump_hack && down) {
+        if (config.get<bool>("jump_hack", false) && down) {
             m_fields->jump = true;
         }
 
@@ -299,11 +299,11 @@ class $modify(GJBaseGameLayer) {
     }
 
     void update(float dt) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         GJBaseGameLayer::update(dt);
 
-        if (hacks.jump_hack && m_fields->jump) {
+        if (config.get<bool>("jump_hack", false) && m_fields->jump) {
             m_player1->m_isOnGround = true;
             m_player2->m_isOnGround = true;
             m_fields->jump = false;
@@ -319,23 +319,23 @@ class $modify(GJBaseGameLayer) {
     }
 
     void updateZoom(float p0, float p1, int p2, float p3, int p4, int p5) {
-        auto& hacks = Hacks::get();
-        if (hacks.no_camera_zoom) return;
+        auto& config = Config::get();
+        if (config.get<bool>("no_camera_zoom", false)) return;
 
         GJBaseGameLayer::updateZoom(p0, p1, p2, p3, p4, p5);
     }
 
     void teleportPlayer(TeleportPortalObject *p0, PlayerObject *p1) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
         bool orig = p0->m_hasNoEffects;
-        p0->m_hasNoEffects = hacks.no_lighting ? true : orig;
+        p0->m_hasNoEffects = config.get<bool>("no_lighting", false) ? true : orig;
         GJBaseGameLayer::teleportPlayer(p0, p1);
         p0->m_hasNoEffects = orig;
     }
 
     bool canBeActivatedByPlayer(PlayerObject *p0, EffectGameObject *p1) {
-        auto& hacks = Hacks::get();
-        if (hacks.no_mirror_portal && p1->m_objectType == GameObjectType::InverseMirrorPortal) return false;
+        auto& config = Config::get();
+        if (config.get<bool>("no_mirror_portal", false) && p1->m_objectType == GameObjectType::InverseMirrorPortal) return false;
 
         return GJBaseGameLayer::canBeActivatedByPlayer(p0, p1);
     }
@@ -343,8 +343,8 @@ class $modify(GJBaseGameLayer) {
     void processCommands(float dt) {
         GJBaseGameLayer::processCommands(dt);
 
-        auto& hacks = Hacks::get();
-        if (hacks.show_hitboxes && hacks.draw_trail) {
+        auto& config = Config::get();
+        if (config.get<bool>("show_hitboxes", false) && config.get<bool>("draw_trail", false)) {
             if (!m_player1->m_isDead) {
                 playerTrail1.push_back(m_player1->getObjectRect());
                 playerTrail2.push_back(m_player2->getObjectRect());
@@ -353,7 +353,7 @@ class $modify(GJBaseGameLayer) {
             auto pl = GameManager::sharedState()->getPlayLayer();
             if (!pl) return;
 
-            auto maxLength = static_cast<size_t>(hacks.trail_size);
+            auto maxLength = static_cast<size_t>(config.get<int>("trail_size", 240));
             while (playerTrail1.size() > maxLength)
                 playerTrail1.pop_front();
             while (playerTrail2.size() > maxLength)
@@ -362,9 +362,9 @@ class $modify(GJBaseGameLayer) {
     }
 
     float getModifiedDelta(float dt) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
-        if (!hacks.fps_enabled) {
+        if (!config.get<bool>("fps_enabled", false)) {
             return GJBaseGameLayer::getModifiedDelta(dt);
         }
 
@@ -372,7 +372,7 @@ class $modify(GJBaseGameLayer) {
             dt = 0.f;
         }
 
-        float modifier = fminf(1.0, m_gameState.m_timeWarp) / hacks.fps_value;
+        float modifier = fminf(1.0, m_gameState.m_timeWarp) / config.get<float>("fps_value", 240.f);
         float total = dt + m_unk3248; //probably m_physDeltaBuffer, idk
         double result = (double)llroundf(total / modifier) * modifier;
         m_unk3248 = total - result;
@@ -382,10 +382,10 @@ class $modify(GJBaseGameLayer) {
 
 class $modify(UILayer) {
     bool init(GJBaseGameLayer* p0) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         if (!UILayer::init(p0)) return false;
-        if (!hacks.hide_pause_button) return true;
+        if (!config.get<bool>("hide_pause_button", false)) return true;
         
         auto menu = geode::cocos::getChildOfType<cocos2d::CCMenu>(this, 0);
         auto btn = geode::cocos::getChildOfType<CCMenuItemSpriteExtra>(menu, 0);
@@ -399,8 +399,8 @@ class $modify(UILayer) {
 
 class $modify(CameraTriggerGameObject) {
     void triggerObject(GJBaseGameLayer *p0, int p1, const gd::vector<int> *p2) {
-        auto& hacks = Hacks::get();
-        if (hacks.no_camera_move) return;
+        auto& config = Config::get();
+        if (config.get<bool>("no_camera_move", false)) return;
 
         CameraTriggerGameObject::triggerObject(p0, p1, p2);
     }
@@ -408,8 +408,8 @@ class $modify(CameraTriggerGameObject) {
 
 class $modify(ShaderLayer) {
     void visit() {
-        auto& hacks = Hacks::get();
-        if (hacks.no_shader_layer)
+        auto& config = Config::get();
+        if (config.get<bool>("no_shader_layer", false))
             return CCNode::visit();
 
         ShaderLayer::visit();
@@ -418,8 +418,8 @@ class $modify(ShaderLayer) {
 
 class $modify(cocos2d::CCParticleSystemQuad) {
     void draw() {
-        auto& hacks = Hacks::get();
-        if (hacks.no_particles) return;
+        auto& config = Config::get();
+        if (config.get<bool>("no_particles", false)) return;
 
         cocos2d::CCParticleSystemQuad::draw();
     }
@@ -427,8 +427,8 @@ class $modify(cocos2d::CCParticleSystemQuad) {
 
 class $modify(GameToolbox) {
     static gd::string intToShortString(int value) {
-        auto& hacks = Hacks::get();
-        if (!hacks.no_short_number)
+        auto& config = Config::get();
+        if (!config.get<bool>("no_short_number", false))
             return GameToolbox::intToShortString(value);
 
         gd::string str = fmt::format("{}", value);
@@ -440,7 +440,7 @@ class $modify(LevelPage) {
     void onPlay(cocos2d::CCObject* sender) {
         auto coins = m_level->m_requiredCoins;
 
-        if (Hacks::get().main_levels) m_level->m_requiredCoins = 0;
+        if (Config::get().get<bool>("main_levels", false)) m_level->m_requiredCoins = 0;
 
         LevelPage::onPlay(sender);
 
@@ -453,7 +453,7 @@ class $modify(LevelInfoLayer) {
         if (!LevelInfoLayer::init(p0, p1))
             return false;
 
-        if (!Hacks::get().copy_hack) return true;
+        if (!Config::get().get<bool>("copy_hack", false)) return true;
 
         auto gm = GameManager::sharedState();
         if (gm->m_playerUserID == p0->m_userID) return true;
@@ -470,7 +470,7 @@ class $modify(LevelInfoLayer) {
     void levelDownloadFinished(GJGameLevel* p0) {
         LevelInfoLayer::levelDownloadFinished(p0);
 
-        if (!Hacks::get().copy_hack) return;
+        if (!Config::get().get<bool>("copy_hack", false)) return;
 
         if (m_cloneBtn != nullptr) {
             m_cloneBtn->setVisible(false);
@@ -482,7 +482,7 @@ class $modify(PauseLayer) {
     void customSetup() {
         auto levelType = PlayLayer::get()->m_level->m_levelType;
 
-        if (Hacks::get().level_edit)
+        if (Config::get().get<bool>("level_edit", false))
             PlayLayer::get()->m_level->m_levelType = GJLevelType::Editor;
 
         PauseLayer::customSetup();
@@ -493,7 +493,7 @@ class $modify(PauseLayer) {
     void onEdit(cocos2d::CCObject* sender) {
         auto a = PlayLayer::get()->m_level->m_levelType;
 
-        if (Hacks::get().level_edit)
+        if (Config::get().get<bool>("level_edit", false))
             PlayLayer::get()->m_level->m_levelType = GJLevelType::Editor;
 
         PauseLayer::onEdit(sender);
@@ -502,11 +502,11 @@ class $modify(PauseLayer) {
     }
 
     void musicSliderChanged(cocos2d::CCObject* sender) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         PauseLayer::musicSliderChanged(sender);
         
-        if (!hacks.allow_low_volume)
+        if (!Config::get().get<bool>("allow_low_volume", false))
             return;
         
         auto value = geode::cast::typeinfo_cast<SliderThumb*>(sender)->getValue();
@@ -519,7 +519,7 @@ class $modify(PauseLayer) {
     #ifdef GEODE_IS_ANDROID
     
     void sfxSliderChanged(cocos2d::CCObject* sender) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         PauseLayer::sfxSliderChanged(sender);
         
@@ -541,13 +541,13 @@ class $modify(LevelTools) {
         if (LevelTools::verifyLevelIntegrity(p0, p1))
             return true;
             
-        return Hacks::get().level_edit;
+        return Config::get().get<bool>("level_edit", false);
     }
 };
 
 class $modify(EditLevelLayer) {
     void onShare(CCObject* sender) {
-        if (Hacks::get().no_c_mark) m_level->m_originalLevel = 0;
+        if (Config::get().get<bool>("no_c_mark", false)) m_level->m_originalLevel = 0;
 
         EditLevelLayer::onShare(sender);
     }
@@ -569,7 +569,7 @@ class $modify(ShareLevelLayer) {
 		auto isVerifiedRaw = level->m_isVerifiedRaw;
 		auto isVerified = level->m_isVerified;
 
-        if (Hacks::get().verify_hack) {
+        if (Config::get().get<bool>("verify_hack", false)) {
 		    level->m_isVerifiedRaw = true;
 		    level->m_isVerified = true;
         }
@@ -583,7 +583,7 @@ class $modify(ShareLevelLayer) {
 
 class $modify(SongSelectNode) {
     void audioNext(cocos2d::CCObject* p0) {
-        if (Hacks::get().default_song_bypass) {
+        if (Config::get().get<bool>("default_song_bypass", false)) {
             m_selectedSongID++;
             getLevelSettings()->m_level->m_audioTrack = m_selectedSongID;
 
@@ -594,7 +594,7 @@ class $modify(SongSelectNode) {
     }
 
     void audioPrevious(cocos2d::CCObject* p0) {
-        if (Hacks::get().default_song_bypass) {
+        if (Config::get().get<bool>("default_song_bypass", false)) {
             m_selectedSongID--;
             getLevelSettings()->m_level->m_audioTrack = m_selectedSongID;
             
@@ -618,9 +618,9 @@ class $modify(LevelEditorLayer) {
     void updateEditor(float dt) {
         LevelEditorLayer::updateEditor(dt);
 
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
-        if (hacks.show_hitboxes && hacks.draw_trail) {            
+        if (config.get<bool>("show_hitboxes", false) && config.get<bool>("draw_trail", false)) {            
             drawTrail(m_debugDrawNode);
         }
     }
@@ -635,11 +635,11 @@ class $modify(LevelEditorLayer) {
 
 class $modify(OptionsLayer) {
     void musicSliderChanged(cocos2d::CCObject* sender) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         OptionsLayer::musicSliderChanged(sender);
         
-        if (!hacks.allow_low_volume)
+        if (!config.get<bool>("allow_low_volume", false))
             return;
         
         auto value = geode::cast::typeinfo_cast<SliderThumb*>(sender)->getValue();
@@ -650,11 +650,11 @@ class $modify(OptionsLayer) {
     }
 
     void sfxSliderChanged(cocos2d::CCObject* sender) {
-        auto& hacks = Hacks::get();
+        auto& config = Config::get();
 
         OptionsLayer::sfxSliderChanged(sender);
         
-        if (!hacks.allow_low_volume)
+        if (!config.get<bool>("allow_low_volume", false))
             return;
 
         auto value = geode::cast::typeinfo_cast<SliderThumb*>(sender)->getValue();

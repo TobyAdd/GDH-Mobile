@@ -4,11 +4,11 @@
 ReplayEngine engine;
 
 unsigned ReplayEngine::get_frame() {
-    auto& hacks = Hacks::get();
+    auto& config = Config::get();
     auto pl = GameManager::sharedState()->getPlayLayer();
 
     if (pl)
-        return static_cast<unsigned>(pl->m_gameState.m_levelTime * hacks.fps_value);
+        return static_cast<unsigned>(pl->m_gameState.m_levelTime * config.get<float>("fps_value", 240.f));
     return 0;
 } 
 
@@ -95,10 +95,11 @@ std::string ReplayEngine::save(std::string name)
     if (replay2.empty())
         return "Replay doesn't have actions";
 
-    auto& hacks = Hacks::get();
+    auto& config = Config::get();
     std::ofstream file(folderMacroPath / std::string(name + ".re"), std::ios::binary);
 
-    file.write(reinterpret_cast<char *>(&hacks.fps_value), sizeof(hacks.fps_value));
+    float fps_value = config.get<float>("fps_value", 240.f);
+    file.write(reinterpret_cast<char *>(&fps_value), sizeof(fps_value));
 
     unsigned replay_size = replay.size();
     unsigned replay2_size = replay2.size();
@@ -118,12 +119,15 @@ std::string ReplayEngine::load(std::string name)
     if (!replay2.empty())
         return "Please clear replay before loading another";
 
-    auto& hacks = Hacks::get();
+    auto& config = Config::get();
     std::ifstream file(folderMacroPath / std::string(name + ".re"), std::ios::binary);
     if (!file)
         return "Replay doesn't exist";
 
-    file.read(reinterpret_cast<char *>(&hacks.fps_value), sizeof(hacks.fps_value));
+    float fps_value;
+    file.read(reinterpret_cast<char *>(&fps_value), sizeof(fps_value));
+    config.set<float>("fps_value", fps_value);
+
 
     unsigned replay_size = 0;
     unsigned replay2_size = 0;

@@ -74,7 +74,7 @@ bool HacksLayer::setup() {
     background->setContentSize({230, 180});
     m_mainLayer->addChild(background);
 
-    auto& hacks = Hacks::get();
+    auto& config = Config::get();
 
     auto arrow = CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
     auto left_arrowClick = CCMenuItemExt::createSpriteExtra(arrow, [this](CCMenuItemSpriteExtra* sender) {
@@ -149,20 +149,20 @@ bool HacksLayer::setup() {
     //
 
     coreTab = HacksTab::create();
-    coreTab->addToggle("Noclip", hacks.noclip, [&hacks](bool enabled) { hacks.noclip = enabled; });
-    coreTab->addToggle("Unlock Items", hacks.unlock_items, [&hacks](bool enabled) { hacks.unlock_items = enabled; });
-    coreTab->addToggle("No Respawn Blink", hacks.no_respawn_blink, [&hacks](bool enabled) { hacks.no_respawn_blink = enabled; });
-    coreTab->addToggle("No Death Effect", hacks.no_death_effect, [&hacks](bool enabled) { hacks.no_death_effect = enabled; });
-    coreTab->addToggle("Safe Mode", hacks.safe_mode, [&hacks](bool enabled) { hacks.safe_mode = enabled; });
+    coreTab->addToggle("Noclip", config.get<bool>("noclip", false), [&config](bool enabled) { config.set<bool>("noclip", enabled); });
+    coreTab->addToggle("Unlock Items", config.get<bool>("unlock_items", false), [&config](bool enabled) { config.set<bool>("unlock_items", enabled); });
+    coreTab->addToggle("No Respawn Blink", config.get<bool>("no_respawn_blink", false), [&config](bool enabled) { config.set<bool>("no_respawn_blink", enabled); });
+    coreTab->addToggle("No Death Effect", config.get<bool>("no_death_effect", false), [&config](bool enabled) { config.set<bool>("no_death_effect", enabled); });
+    coreTab->addToggle("Safe Mode", config.get<bool>("safe_mode", false), [&config](bool enabled) { config.set<bool>("safe_mode", enabled); });
     
-    coreTab->addToggle("TPS", hacks.fps_enabled, [&hacks](bool enabled) { hacks.fps_enabled = enabled; });
+    coreTab->addToggle("TPS", config.get<bool>("fps_enabled", false), [&config](bool enabled) { config.set<bool>("fps_enabled", enabled); });
 
     auto fps_value_input = TextInput::create(55, "TPS Value", "chatFont.fnt");
     fps_value_input->setPosition({225.f, coreTab->y_lastToggle});
     fps_value_input->setFilter("1234567890.");
     fps_value_input->setMaxCharCount(6);
-    fps_value_input->setString(fmt::format("{:.0f}", hacks.fps_value));
-    fps_value_input->setCallback([&hacks](const std::string& text) {
+    fps_value_input->setString(fmt::format("{:.0f}", config.get<float>("fps_value", 240.f)));
+    fps_value_input->setCallback([&config](const std::string& text) {
         float fps = 240.f;
         
         bool valid = !text.empty() && std::all_of(text.begin(), text.end(), [](char c) { return std::isdigit(c) || c == '.'; });
@@ -173,7 +173,7 @@ bool HacksLayer::setup() {
         }
         
         if (fps >= 1.f) {
-            hacks.fps_value = fps;
+            config.set<float>("fps_value", fps);
         }
     });
     coreTab->addChild(fps_value_input);     
@@ -186,14 +186,14 @@ bool HacksLayer::setup() {
     //Speedhack
     //
     
-    coreTab->addToggle("Speedhack", hacks.speedhack_enabled, [&hacks](bool enabled) { hacks.speedhack_enabled = enabled; });
+    coreTab->addToggle("Speedhack", config.get<bool>("speedhack_enabled", false), [&config](bool enabled) { config.set<bool>("speedhack_enabled", enabled); });
 
     auto speedhack_value_input = TextInput::create(55, "Speed Value", "chatFont.fnt");
     speedhack_value_input->setPosition({285.f, coreTab->y_lastToggle + 5});
     speedhack_value_input->setFilter("1234567890.");
     speedhack_value_input->setMaxCharCount(6);
-    speedhack_value_input->setString(fmt::format("{:.2f}", hacks.speedhack_value));
-    speedhack_value_input->setCallback([&hacks](const std::string& text) {
+    speedhack_value_input->setString(fmt::format("{:.2f}", config.get<float>("speedhack_value", 1.f)));
+    speedhack_value_input->setCallback([&config](const std::string& text) {
         float speed = 1.f;
         
         bool valid = !text.empty() && std::all_of(text.begin(), text.end(), [](char c) { return std::isdigit(c) || c == '.'; });
@@ -204,14 +204,14 @@ bool HacksLayer::setup() {
         }
         
         if (speed >= 0.01f) {
-            hacks.speedhack_value = speed;
+            config.set<float>("speedhack_value", speed);
         }
     });
     coreTab->addChild(speedhack_value_input);
 
     coreTab2 = HacksTab::create();
     coreTab2->setVisible(false);
-    coreTab2->addToggle("Speedhack Audio", hacks.speedhack_audio, [&hacks](bool enabled) { hacks.speedhack_audio = enabled; });    
+    coreTab2->addToggle("Speedhack Audio", config.get<bool>("speedhack_audio", false), [&config](bool enabled) { config.set<bool>("speedhack_audio", enabled); });    
     
 
 
@@ -224,42 +224,42 @@ bool HacksLayer::setup() {
     //
     playerTab = HacksTab::create();
     playerTab->setVisible(false);
-    playerTab->addToggle("Allow Low Volume", hacks.allow_low_volume, [&hacks](bool enabled) { hacks.allow_low_volume = enabled; });
-    playerTab->addToggle("Auto Pickup Coins", hacks.auto_pickup_coins, [&hacks](bool enabled) { hacks.auto_pickup_coins = enabled; });
-    playerTab->addToggle("Jump Hack", hacks.jump_hack, [&hacks](bool enabled) { hacks.jump_hack = enabled; });
-    playerTab->addToggle("Force Platformer", hacks.force_platformer, [&hacks](bool enabled) { hacks.force_platformer = enabled; });
-    playerTab->addToggle("Hide Pause Button", hacks.hide_pause_button, [&hacks](bool enabled) { hacks.hide_pause_button = enabled; });
-    playerTab->addToggle("No Camera Move", hacks.no_camera_move, [&hacks](bool enabled) { hacks.no_camera_move = enabled; });
-    playerTab->addToggle("No Camera Zoom", hacks.no_camera_zoom, [&hacks](bool enabled) { hacks.no_camera_zoom = enabled; });
+    playerTab->addToggle("Allow Low Volume", config.get<bool>("allow_low_volume", false), [&config](bool enabled) { config.set<bool>("allow_low_volume", enabled); });
+    playerTab->addToggle("Auto Pickup Coins", config.get<bool>("auto_pickup_coins", false), [&config](bool enabled) { config.set<bool>("auto_pickup_coins", enabled); });
+    playerTab->addToggle("Jump Hack", config.get<bool>("jump_hack", false), [&config](bool enabled) { config.set<bool>("jump_hack", enabled); });
+    playerTab->addToggle("Force Platformer", config.get<bool>("force_platformer", false), [&config](bool enabled) { config.set<bool>("force_platformer", enabled); });
+    playerTab->addToggle("Hide Pause Button", config.get<bool>("hide_pause_button", false), [&config](bool enabled) { config.set<bool>("hide_pause_button", enabled); });
+    playerTab->addToggle("No Camera Move", config.get<bool>("no_camera_move", false), [&config](bool enabled) { config.set<bool>("no_camera_move", enabled); });
+    playerTab->addToggle("No Camera Zoom", config.get<bool>("no_camera_zoom", false), [&config](bool enabled) { config.set<bool>("no_camera_zoom", enabled); });
 
     playerTab2 = HacksTab::create();
     playerTab2->setVisible(false);
-    playerTab2->addToggle("No Shaders", hacks.no_shader_layer, [&hacks](bool enabled) { hacks.no_shader_layer = enabled; });
-    playerTab2->addToggle("No Particles", hacks.no_particles, [&hacks](bool enabled) { hacks.no_particles = enabled; });
-    playerTab2->addToggle("No Short Number", hacks.no_short_number, [&hacks](bool enabled) { hacks.no_short_number = enabled; });
-    playerTab2->addToggle("No Glow", hacks.no_glow, [&hacks](bool enabled) { hacks.no_glow = enabled; });
-    playerTab2->addToggle("No Mirror Portal", hacks.no_mirror_portal, [&hacks](bool enabled) { hacks.no_mirror_portal = enabled; });
-    playerTab2->addToggle("Main Levels Bypass", hacks.main_levels, [&hacks](bool enabled) { hacks.main_levels = enabled; });
-    playerTab2->addToggle("No Lighting", hacks.no_lighting, [&hacks](bool enabled) { hacks.no_lighting = enabled; });
+    playerTab2->addToggle("No Shaders", config.get<bool>("no_shader_layer", false), [&config](bool enabled) { config.set<bool>("no_shader_layer", enabled); });
+    playerTab2->addToggle("No Particles", config.get<bool>("no_particles", false), [&config](bool enabled) { config.set<bool>("no_particles", enabled); });
+    playerTab2->addToggle("No Short Number", config.get<bool>("no_short_number", false), [&config](bool enabled) { config.set<bool>("no_short_number", enabled); });
+    playerTab2->addToggle("No Glow", config.get<bool>("no_glow", false), [&config](bool enabled) { config.set<bool>("no_glow", enabled); });
+    playerTab2->addToggle("No Mirror Portal", config.get<bool>("no_mirror_portal", false), [&config](bool enabled) { config.set<bool>("no_mirror_portal", enabled); });
+    playerTab2->addToggle("Main Levels Bypass", config.get<bool>("main_levels", false), [&config](bool enabled) { config.set<bool>("main_levels", enabled); });
+    playerTab2->addToggle("No Lighting", config.get<bool>("no_lighting", false), [&config](bool enabled) { config.set<bool>("no_lighting", enabled); });
 
     playerTab3 = HacksTab::create();
     playerTab3->setVisible(false);
-    playerTab3->addToggle("Show Hitbox", hacks.show_hitboxes, [&hacks](bool enabled) {
-        hacks.show_hitboxes = enabled;
+    playerTab3->addToggle("Show Hitbox", config.get<bool>("show_hitboxes", false), [&config](bool enabled) {
+        config.set<bool>("show_hitboxes", enabled);
         auto pl = PlayLayer::get();
-        if (pl && !hacks.show_hitboxes && !(pl->m_isPracticeMode && GameManager::get()->getGameVariable("0166"))) {
+        if (pl && !config.get<bool>("show_hitboxes", false) && !(pl->m_isPracticeMode && GameManager::get()->getGameVariable("0166"))) {
             pl->m_debugDrawNode->setVisible(false);
         }    
     });
 
-    playerTab3->addToggle("Hitbox Trail", hacks.draw_trail, [&hacks](bool enabled) { hacks.draw_trail = enabled; });
+    playerTab3->addToggle("Hitbox Trail", config.get<bool>("draw_trail", false), [&config](bool enabled) { config.set<bool>("draw_trail", enabled); });
 
     auto hitbox_hitbox_trail_size_input = TextInput::create(55, "Trail Size", "chatFont.fnt");
     hitbox_hitbox_trail_size_input->setPosition({310.f, playerTab3->y_lastToggle + 15});
     hitbox_hitbox_trail_size_input->setFilter("1234567890");
     hitbox_hitbox_trail_size_input->setMaxCharCount(3);
-    hitbox_hitbox_trail_size_input->setString(fmt::format("{}", hacks.trail_size));
-    hitbox_hitbox_trail_size_input->setCallback([&hacks](const std::string& text) {
+    hitbox_hitbox_trail_size_input->setString(fmt::format("{}", config.get<int>("trail_size", 240)));
+    hitbox_hitbox_trail_size_input->setCallback([&config](const std::string& text) {
         int trail_size = 240;
         
         bool valid = !text.empty();
@@ -269,7 +269,7 @@ bool HacksLayer::setup() {
             iss >> trail_size;
         }
         
-        hacks.trail_size = trail_size;
+        config.set<int>("draw_trail", trail_size);
     });
     playerTab3->addChild(hitbox_hitbox_trail_size_input); 
     //
@@ -282,10 +282,10 @@ bool HacksLayer::setup() {
 
     creatorTab = HacksTab::create();
     creatorTab->setVisible(false);
-    creatorTab->addToggle("Copy Hack", hacks.copy_hack, [&hacks](bool enabled) { hacks.copy_hack = enabled; });
-    creatorTab->addToggle("Level Edit", hacks.level_edit, [&hacks](bool enabled) { hacks.level_edit = enabled; });
-    creatorTab->addToggle("No (C) Mark", hacks.no_c_mark, [&hacks](bool enabled) { hacks.no_c_mark = enabled; });
-    creatorTab->addToggle("Verify Hack", hacks.verify_hack, [&hacks](bool enabled) { hacks.verify_hack = enabled; });
+    creatorTab->addToggle("Copy Hack", config.get<bool>("copy_hack", false), [&config](bool enabled) { config.set<bool>("copy_hack", enabled); });
+    creatorTab->addToggle("Level Edit", config.get<bool>("level_edit", false), [&config](bool enabled) { config.set<bool>("level_edit", enabled); });
+    creatorTab->addToggle("No (C) Mark", config.get<bool>("no_c_mark", false), [&config](bool enabled) { config.set<bool>("no_c_mark", enabled); });
+    creatorTab->addToggle("Verify Hack", config.get<bool>("verify_hack", false), [&config](bool enabled) { config.set<bool>("verify_hack", enabled); });
 
     //
     // Creator
@@ -298,14 +298,15 @@ bool HacksLayer::setup() {
     replayTab->setPosition({0, 0});
     replayTab->setVisible(false);    
 
-    record_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this](CCMenuItemToggler* sender) {
+    record_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this, &config](CCMenuItemToggler* sender) {
         auto& hacks = Hacks::get();
 
         play_toggle->toggle(false);
         if (!record_toggle->isOn()) {
             engine.mode = state::record;
 
-            if (!hacks.fps_enabled) {
+            bool fps_enabled = config.get<bool>("fps_enabled", false);
+            if (!fps_enabled) {
                 FLAlertLayer::create("Info", "Enable TPS Bypass to record the replay", "OK")->show();
                 engine.mode = state::disable;
                 record_toggle->toggle(true);
@@ -331,12 +332,13 @@ bool HacksLayer::setup() {
     record_label->setScale(0.5f);
     replayTab->addChild(record_label);
 
-    play_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this](CCMenuItemToggler* sender) {
+    play_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this, &config](CCMenuItemToggler* sender) {
         auto& hacks = Hacks::get();
 
         record_toggle->toggle(false);
         if (!play_toggle->isOn()) {
-            if (!hacks.fps_enabled) {
+            bool fps_enabled = config.get<bool>("fps_enabled", false);
+            if (!fps_enabled) {
                 FLAlertLayer::create("Info", "Enable TPS Bypass to playback the replay", "OK")->show();
                 engine.mode = state::disable;
                 play_toggle->toggle(true);
@@ -360,7 +362,7 @@ bool HacksLayer::setup() {
     auto replay_name_input = TextInput::create(220, "Replay Name", "chatFont.fnt");
     replay_name_input->setPosition({240.f, 130.f});
     replay_name_input->setString(engine.replay_name);
-    replay_name_input->setCallback([&hacks](const std::string& text) {
+    replay_name_input->setCallback([&config](const std::string& text) {
         engine.replay_name = text;
     });
     replayTab->addChild(replay_name_input);
@@ -491,5 +493,5 @@ HacksLayer* HacksLayer::create() {
 
 void HacksLayer::onExit() {
     geode::Popup<>::onExit();
-    Hacks::get().save(fileDataPath);
+    Config::get().save(fileDataPath);
 }
