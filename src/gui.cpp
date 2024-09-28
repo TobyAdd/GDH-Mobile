@@ -299,8 +299,6 @@ bool HacksLayer::setup() {
     replayTab->setVisible(false);    
 
     record_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this, &config](CCMenuItemToggler* sender) {
-        auto& hacks = Hacks::get();
-
         play_toggle->toggle(false);
         if (!record_toggle->isOn()) {
             engine.mode = state::record;
@@ -333,8 +331,6 @@ bool HacksLayer::setup() {
     replayTab->addChild(record_label);
 
     play_toggle = CCMenuItemExt::createTogglerWithStandardSprites(1.f, [this, &config](CCMenuItemToggler* sender) {
-        auto& hacks = Hacks::get();
-
         record_toggle->toggle(false);
         if (!play_toggle->isOn()) {
             bool fps_enabled = config.get<bool>("fps_enabled", false);
